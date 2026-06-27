@@ -1,0 +1,67 @@
+[gd_scene format=3 uid="uid://bbnt6j4uy6awu"]
+
+[ext_resource type="Script" uid="uid://dupgl3gqi50lm" path="res://addons/Eye Detection/python_results.gd" id="1_dayeg"]
+[ext_resource type="Script" uid="uid://iult0dhysvm" path="res://addons/Eye Detection/camera.gd" id="2_u0mdj"]
+
+[sub_resource type="GDScript" id="GDScript_u0mdj"]
+script/source = "extends Node
+
+
+
+func _on_eye_detection_telemetry_received(raw_text: String, type: String, status_code: String, detail: String) -> void:
+	if status_code == \"EC\":
+		$\"upper half\".position.y = 0
+		$\"lower half\".position.y = 320
+	else:
+		create_tween().tween_property($\"upper half\", \"global_position:y\", -300.0, 0.5)
+		create_tween().tween_property($\"lower half\", \"global_position:y\", 600.0, 0.5)
+		
+"
+
+[node name="Control" type="Control" unique_id=1155235894]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="EyeDetection" type="Node" parent="." unique_id=494767839]
+script = ExtResource("1_dayeg")
+visualize_stream = true
+metadata/_custom_type_script = "uid://dupgl3gqi50lm"
+
+[node name="CameraPreview" type="TextureRect" parent="." unique_id=488336169 node_paths=PackedStringArray("eye_sensor")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_u0mdj")
+eye_sensor = NodePath("../EyeDetection")
+metadata/_custom_type_script = "uid://iult0dhysvm"
+
+[node name="Blinks" type="Node" parent="." unique_id=1070094705]
+script = SubResource("GDScript_u0mdj")
+
+[node name="upper half" type="ColorRect" parent="Blinks" unique_id=813650858]
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = -300.0
+offset_bottom = 20.0
+grow_horizontal = 2
+color = Color(0, 0, 0, 1)
+
+[node name="lower half" type="ColorRect" parent="Blinks" unique_id=900489404]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -48.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0, 0, 0, 1)
+
+[connection signal="telemetry_received" from="EyeDetection" to="Blinks" method="_on_eye_detection_telemetry_received"]

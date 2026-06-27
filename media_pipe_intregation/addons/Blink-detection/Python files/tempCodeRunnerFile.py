@@ -1,1 +1,0 @@
-eye_ratio = (left_eye_ratio + right_eye_ratio)/2
