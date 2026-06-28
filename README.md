@@ -20,7 +20,7 @@ Whether you're creating horror games, accessibility features, or experimental ga
 * **Works in both the editor and exported projects**
 * **Example scene included**
 
-## 🎮 Perfect For
+##  Perfect For
 
 * Horror games that react to player blinks
 * Accessibility systems
