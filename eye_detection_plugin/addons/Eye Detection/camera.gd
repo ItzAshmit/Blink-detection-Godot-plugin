@@ -37,7 +37,10 @@ func _process(_delta: float) -> void:
 
 			var err := image.load_png_from_buffer(bytes)
 			if err == OK:
-				texture = ImageTexture.create_from_image(image)
+				if texture == null:
+					texture = ImageTexture.create_from_image(image)
+				else:
+					texture.update(image)
 			else:
 				return
 	else:

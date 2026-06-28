@@ -3,12 +3,37 @@
 [ext_resource type="Script" uid="uid://dupgl3gqi50lm" path="res://addons/Eye Detection/python_results.gd" id="1_dayeg"]
 [ext_resource type="Script" uid="uid://iult0dhysvm" path="res://addons/Eye Detection/camera.gd" id="2_u0mdj"]
 
+[sub_resource type="GDScript" id="GDScript_6x56t"]
+script/source = "extends Control
+
+@export var raw_text_label:Label
+@export var type_label:Label
+@export var status_code_label:Label
+@export var detail_label:Label
+@export var extra:Label
+@export var is_face_to_detect:Label
+
+
+func _on_eye_detection_telemetry_received(RawText: String, Type: String, Code: String, Detail: String, Extra: String) -> void:
+	raw_text_label.text = \"Raw Text: %s\"%RawText
+	type_label.text = \"Type: %s\"%Type
+	status_code_label.text = \"Status Code: %s\"%Code
+	detail_label.text = \"Details: %s\"%Detail
+	extra.text = \"Extra: %s\"%Extra
+
+
+
+
+func _on_eye_detection_face_detectable_state(State: bool) -> void:
+	is_face_to_detect.text = \"Is Face Detectable: %s\"%str(State)
+"
+
 [sub_resource type="GDScript" id="GDScript_u0mdj"]
 script/source = "extends Node
 
 
 
-func _on_eye_detection_telemetry_received(raw_text: String, type: String, status_code: String, detail: String) -> void:
+func _on_eye_detection_telemetry_received(raw_text: String, type: String, status_code: String, detail: String, extra: String) -> void:
 	if status_code == \"EC\":
 		$\"upper half\".position.y = 0
 		$\"lower half\".position.y = 320
@@ -18,17 +43,29 @@ func _on_eye_detection_telemetry_received(raw_text: String, type: String, status
 		
 "
 
-[node name="Control" type="Control" unique_id=1155235894]
+[node name="Control" type="Control" unique_id=1155235894 node_paths=PackedStringArray("raw_text_label", "type_label", "status_code_label", "detail_label", "extra", "is_face_to_detect")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = SubResource("GDScript_6x56t")
+raw_text_label = NodePath("CanvasLayer/VBoxContainer/Raw Text")
+type_label = NodePath("CanvasLayer/VBoxContainer/Type")
+status_code_label = NodePath("CanvasLayer/VBoxContainer/Status code")
+detail_label = NodePath("CanvasLayer/VBoxContainer/Details")
+extra = NodePath("CanvasLayer/VBoxContainer/Extra")
+is_face_to_detect = NodePath("CanvasLayer/VBoxContainer/Is_face_detectable")
 
 [node name="EyeDetection" type="Node" parent="." unique_id=494767839]
 script = ExtResource("1_dayeg")
 visualize_stream = true
+type_of_stream = 2
+color_of_right_eye = Color(0.5557448, 0.56057084, 0, 1)
+color_of_left_eye = Color(0.6989267, 0.27490222, 1, 1)
+color_of_right_eye2 = Color(0, 0.6386158, 0.36313903, 1)
+color_of_left_eye2 = Color(0.81827235, 0.38421914, 0.36083278, 1)
 metadata/_custom_type_script = "uid://dupgl3gqi50lm"
 
 [node name="CameraPreview" type="TextureRect" parent="." unique_id=488336169 node_paths=PackedStringArray("eye_sensor")]
@@ -38,6 +75,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+flip_h = true
 script = ExtResource("2_u0mdj")
 eye_sensor = NodePath("../EyeDetection")
 metadata/_custom_type_script = "uid://iult0dhysvm"
@@ -64,4 +102,38 @@ grow_horizontal = 2
 grow_vertical = 0
 color = Color(0, 0, 0, 1)
 
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=28784438]
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer" unique_id=444053414]
+offset_right = 1152.0
+offset_bottom = 108.0
+alignment = 1
+
+[node name="Raw Text" type="Label" parent="CanvasLayer/VBoxContainer" unique_id=10099686]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = "Raw Text:"
+
+[node name="Type" type="Label" parent="CanvasLayer/VBoxContainer" unique_id=1962207892]
+layout_mode = 2
+text = "Type:"
+
+[node name="Status code" type="Label" parent="CanvasLayer/VBoxContainer" unique_id=1386424933]
+layout_mode = 2
+text = "Status Code:"
+
+[node name="Details" type="Label" parent="CanvasLayer/VBoxContainer" unique_id=949979442]
+layout_mode = 2
+text = "Details:"
+
+[node name="Extra" type="Label" parent="CanvasLayer/VBoxContainer" unique_id=470157877]
+layout_mode = 2
+text = "Extra:"
+
+[node name="Is_face_detectable" type="Label" parent="CanvasLayer/VBoxContainer" unique_id=1407796307]
+layout_mode = 2
+text = "Is Face Detectable: "
+
+[connection signal="face_detectable_state" from="EyeDetection" to="." method="_on_eye_detection_face_detectable_state"]
+[connection signal="telemetry_received" from="EyeDetection" to="." method="_on_eye_detection_telemetry_received"]
 [connection signal="telemetry_received" from="EyeDetection" to="Blinks" method="_on_eye_detection_telemetry_received"]
