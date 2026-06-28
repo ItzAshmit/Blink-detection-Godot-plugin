@@ -1,11 +1,11 @@
-# 👁️ Eye Detection for Godot 4
+# Eye Detection for Godot 4
 > ⚠️ **This plugin currently supports Windows only.**
 
 Bring your games to life with **real-time eye blink detection** powered by **MediaPipe** and a standard webcam.
 
 Whether you're creating horror games, accessibility features, or experimental gameplay mechanics, this plugin provides an easy-to-use, signal-based API for integrating eye interactions into your projects.
 
-## ✨ Features
+## Features
 
 * **Real-time blink detection**
 * **Blink duration measurement**
@@ -28,21 +28,21 @@ Whether you're creating horror games, accessibility features, or experimental ga
 * Research and educational projects
 * Eye-tracking inspired interactions
 
-## 📡 Signals
+## Signals
 
 * `eyes_closed`
 * `eye_opened(duration)`
 * `face_detectable_state(state)`
 * `telemetry_received(...)`
 
-## 🖥️ Requirements
+## Requirements
 
 * **Windows only** (currently)
 * **Godot 4.x**
 * **Webcam**
 * **Good lighting recommended for best accuracy**
 
-## 🚀 Getting Started
+## Getting Started
 
 1. Add the `EyeDetection` node to your scene.
 2. Run the project.
@@ -52,7 +52,7 @@ Whether you're creating horror games, accessibility features, or experimental ga
 An example scene is included to help you get started immediately.
 
 
-## 🚀 For Exported Projects
+## For Exported Projects
 
 1. Export as usual.
 2. Copy the folder "addons\Eye Detection\Python_files\dist" and paste it along side of your .exe, .pck and .dlls.
