@@ -28,21 +28,6 @@ func _on_eye_detection_face_detectable_state(State: bool) -> void:
 	is_face_to_detect.text = \"Is Face Detectable: %s\"%str(State)
 "
 
-[sub_resource type="GDScript" id="GDScript_u0mdj"]
-script/source = "extends Node
-
-
-
-func _on_eye_detection_telemetry_received(raw_text: String, type: String, status_code: String, detail: String, extra: String) -> void:
-	if status_code == \"EC\":
-		$\"upper half\".position.y = 0
-		$\"lower half\".position.y = 320
-	else:
-		create_tween().tween_property($\"upper half\", \"global_position:y\", -300.0, 0.5)
-		create_tween().tween_property($\"lower half\", \"global_position:y\", 600.0, 0.5)
-		
-"
-
 [node name="Control" type="Control" unique_id=1155235894 node_paths=PackedStringArray("raw_text_label", "type_label", "status_code_label", "detail_label", "extra", "is_face_to_detect")]
 layout_mode = 3
 anchors_preset = 15
@@ -61,11 +46,8 @@ is_face_to_detect = NodePath("CanvasLayer/VBoxContainer/Is_face_detectable")
 [node name="EyeDetection" type="Node" parent="." unique_id=494767839]
 script = ExtResource("1_dayeg")
 visualize_stream = true
-type_of_stream = 2
-color_of_right_eye = Color(0.5557448, 0.56057084, 0, 1)
-color_of_left_eye = Color(0.6989267, 0.27490222, 1, 1)
-color_of_right_eye2 = Color(0, 0.6386158, 0.36313903, 1)
-color_of_left_eye2 = Color(0.81827235, 0.38421914, 0.36083278, 1)
+type_of_stream = 3
+bg_color = Color(0, 1, 1, 1)
 metadata/_custom_type_script = "uid://dupgl3gqi50lm"
 
 [node name="CameraPreview" type="TextureRect" parent="." unique_id=488336169 node_paths=PackedStringArray("eye_sensor")]
@@ -79,28 +61,6 @@ flip_h = true
 script = ExtResource("2_u0mdj")
 eye_sensor = NodePath("../EyeDetection")
 metadata/_custom_type_script = "uid://iult0dhysvm"
-
-[node name="Blinks" type="Node" parent="." unique_id=1070094705]
-script = SubResource("GDScript_u0mdj")
-
-[node name="upper half" type="ColorRect" parent="Blinks" unique_id=813650858]
-anchors_preset = 10
-anchor_right = 1.0
-offset_top = -300.0
-offset_bottom = 20.0
-grow_horizontal = 2
-color = Color(0, 0, 0, 1)
-
-[node name="lower half" type="ColorRect" parent="Blinks" unique_id=900489404]
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -48.0
-offset_bottom = 280.0
-grow_horizontal = 2
-grow_vertical = 0
-color = Color(0, 0, 0, 1)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=28784438]
 
@@ -136,4 +96,3 @@ text = "Is Face Detectable: "
 
 [connection signal="face_detectable_state" from="EyeDetection" to="." method="_on_eye_detection_face_detectable_state"]
 [connection signal="telemetry_received" from="EyeDetection" to="." method="_on_eye_detection_telemetry_received"]
-[connection signal="telemetry_received" from="EyeDetection" to="Blinks" method="_on_eye_detection_telemetry_received"]
