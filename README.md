@@ -55,7 +55,7 @@ An example scene is included to help you get started immediately.
 ## For Exported Projects
 
 1. Export as usual.
-2. Copy the folder "addons\Eye Detection\Python_files\dist" and paste it along side of your .exe, .pck and .dlls.
+2. Copy the folder "addons\Eye Detection\Python_files\dist\EyeDetectionHelper" and paste it along side of your .exe, .pck and .dlls.
 3. Test, if it doesn't work then most likely the folder is not pasted right.
 
 Enjoy!!
