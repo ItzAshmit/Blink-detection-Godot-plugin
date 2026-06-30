@@ -1,6 +1,14 @@
 # Eye Detection for Godot 4
 > ⚠️ **This plugin currently supports Windows only.**
 
+*The Plugin itself is relatively simple and small and thus it only uses only these main scripts as source code*
+
+*- eye_detection_plugin/addons/Eye Detection/Python_files/media_pipe_python_script.py*
+
+*- eye_detection_plugin/addons/Eye Detection/python_results.gd*
+
+*- eye_detection_plugin/addons/Eye Detection/camera.gd*
+
 Bring your games to life with **real-time eye blink detection** powered by **MediaPipe** and a standard webcam.
 
 Whether you're creating horror games, accessibility features, or experimental gameplay mechanics, this plugin provides an easy-to-use, signal-based API for integrating eye interactions into your projects.
