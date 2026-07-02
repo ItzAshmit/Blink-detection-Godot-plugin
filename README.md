@@ -1,13 +1,8 @@
 # Eye Detection for Godot 4
 > ⚠️ **This plugin currently supports Windows only.**
+> 
+> ⚠️ **The Visualization Feature Can Cause Lag (SSD Load).**
 
-*The Plugin itself is relatively simple and small and thus it only uses only these main scripts as source code*
-
-*- eye_detection_plugin/addons/Eye Detection/Python_files/media_pipe_python_script.py*
-
-*- eye_detection_plugin/addons/Eye Detection/python_results.gd*
-
-*- eye_detection_plugin/addons/Eye Detection/camera.gd*
 
 Bring your games to life with **real-time eye blink detection** powered by **MediaPipe** and a standard webcam.
 
@@ -66,7 +61,17 @@ An example scene is included to help you get started immediately.
 2. Copy the folder "addons\Eye Detection\Python_files\dist\EyeDetectionHelper" and paste it along side of your .exe, .pck and .dlls.
 3. Test, if it doesn't work then most likely the folder is not pasted right.
 
-Enjoy!!
+## **Enjoy!!**
+
+
+*The Plugin itself is relatively simple and small and thus it only uses only these main scripts as source code*
+
+*- eye_detection_plugin/addons/Eye Detection/Python_files/media_pipe_python_script.py*
+
+*- eye_detection_plugin/addons/Eye Detection/python_results.gd*
+
+*- eye_detection_plugin/addons/Eye Detection/camera.gd*
+
 
 # Support us by wishlisting our game The Unseeing 
 [The Unseeing Store Page](https://store.steampowered.com/app/4864210/The_Unseeing/)
