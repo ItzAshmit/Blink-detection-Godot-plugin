@@ -2,6 +2,7 @@ import os
 import platform
 import sys
 import time
+import threading
 from pathlib import Path
 
 
@@ -50,7 +51,14 @@ def string_to_bool(input:str) -> bool:
 	emit("ERROR", "FE", "function_error", "string_to_bool")
 	return False
 
+
+
+
+
+is_running: bool = True
 SEP:str = ""
+
+
 def main() -> None:
 
     is_debug_build = string_to_bool(sys.argv[3] if len(sys.argv) > 3 else "false")
@@ -66,7 +74,7 @@ def main() -> None:
     SEP = sys.argv[11] if len(sys.argv) > 11 else "<<<SEPARATOR>>>"
     
 
-
+    threading.Thread(target=stdin_listener, daemon=True).start()
     blink_detection(
         float(sys.argv[1]) if len(sys.argv) > 1 else 0.13,
         float(sys.argv[2]) if len(sys.argv) > 2 else 0.25,
@@ -84,7 +92,7 @@ def main() -> None:
 def pause(result: bool) -> None:
     global paused
     paused = result
-    emit("GAME", "P", f"Game Paused {paused}", "")
+    emit("GAME", "P", f"Game Paused", str(paused))
 
 
 def blink_detection(
@@ -155,12 +163,12 @@ def blink_detection(
     last_no_face_log_time = 0.0
 
     try:
-        while True:
+        while is_running:
+            
             if paused:
                 time.sleep(0.1)
-                emit("GAME", "P", "Game is paused, skipping frame processing", "")
                 continue
-
+            
             ret, frame = cap.read()
             if not ret:
                 emit("ERROR", "CRF", "Camera frame read failed", "")
@@ -254,14 +262,10 @@ def blink_detection(
 
             Update_Frame(bg_screen, visualize_stream)
 
-        cap.release()
-        cv2.destroyAllWindows()
-        sys.exit()
+        stop_process(cap)
 
     finally:
-        cap.release()
-        cv2.destroyAllWindows()
-        sys.exit()
+        stop_process(cap)
 
 
 
@@ -429,6 +433,32 @@ def output_dir() -> Path:
 
 
 
+def stdin_listener():
+    global is_running
+    while is_running:
+        line = sys.stdin.readline()
+        if not line:
+            break
+        command = line.strip()
+        if command == "PAUSE":
+            pause(True)
+        elif command == "RESUME":
+            pause(False)
+        elif command == "STOP":
+            emit("GAME", "STOP", "Stopping the process", "")
+            time.sleep(0.1)
+            is_running = False
+
+
+
+
+
+def stop_process(cap = None) -> None:
+    emit("GAME", "STOP", "Stopping the process", "")
+    if cap:
+        cap.release()
+    cv2.destroyAllWindows()
+    sys.exit()
 
 
 if __name__ == "__main__":

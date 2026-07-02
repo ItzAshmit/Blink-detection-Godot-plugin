@@ -25,6 +25,7 @@ class_name EyeDetection
 var _interpreter_path 
 var _process_info: Dictionary
 var _stdio_stream: FileAccess
+var paused: bool = false
 
 signal telemetry_received(RawText: String, Type: String, Code: String, Details: String, Extra: String)
 
@@ -111,9 +112,34 @@ func _log_telemetry(raw: String, type: String, code: String, msg: String, extra:
 	print("[%s] Code: %s| %s | %s" % [type, code, msg, extra])
 
 
+
+func pause_process() -> void:
+	if _process_info.is_empty():
+		return
+	paused = true
+	_stdio_stream.store_line("PAUSE")
+	_stdio_stream.flush()
+
+
+
+
+
+func resume_process() -> void:
+	if _process_info.is_empty():
+		return
+	paused = false
+	_stdio_stream.store_line("RESUME")
+	_stdio_stream.flush()
+
+
+
+
 func stop_process() -> void:
 	if _process_info.is_empty():
 		return
+
+	_stdio_stream.store_line("STOP")
+	_stdio_stream.flush()
 
 	if OS.is_process_running(_process_info["pid"]):
 		OS.kill(_process_info["pid"])
@@ -125,5 +151,10 @@ func stop_process() -> void:
 
 
 
+
 func _exit_tree() -> void:
 	stop_process()
+
+
+
+

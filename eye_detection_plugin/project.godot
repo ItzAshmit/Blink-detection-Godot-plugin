@@ -15,9 +15,13 @@ run/main_scene="res://addons/Eye Detection/Example Scene/example.tscn"
 config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://icon.svg"
 
-[display]
+[dotnet]
 
-window/stretch/mode="canvas_items"
+project/assembly_name="Eye_Detection_plugin_lite"
+
+[editor]
+
+movie_writer/movie_file="C:/Users/hp/Work/Godot/Others/Blink-detection Godot plugin/eye_detection_plugin/Vids/clip4.avi"
 
 [editor_plugins]
 

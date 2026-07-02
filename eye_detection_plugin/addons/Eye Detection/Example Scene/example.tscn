@@ -6,12 +6,22 @@
 [sub_resource type="GDScript" id="GDScript_6x56t"]
 script/source = "extends Control
 
+@export var eye_detection:EyeDetection
 @export var raw_text_label:Label
 @export var type_label:Label
 @export var status_code_label:Label
 @export var detail_label:Label
 @export var extra:Label
 @export var is_face_to_detect:Label
+@export var resume_button:Button
+@export var pause_button:Button
+
+func _ready() -> void:
+	pause_button.visible = true
+	resume_button.visible = false
+
+
+
 
 
 func _on_eye_detection_telemetry_received(RawText: String, Type: String, Code: String, Detail: String, Extra: String) -> void:
@@ -26,9 +36,21 @@ func _on_eye_detection_telemetry_received(RawText: String, Type: String, Code: S
 
 func _on_eye_detection_face_detectable_state(State: bool) -> void:
 	is_face_to_detect.text = \"Is Face Detectable: %s\"%str(State)
+
+
+func _on_pressed() -> void:
+	if eye_detection.paused:
+		eye_detection.resume_process()
+		resume_button.visible = false
+		pause_button.visible = true
+	else:
+		eye_detection.pause_process()
+		resume_button.visible = true
+		pause_button.visible = false
+		
 "
 
-[node name="Control" type="Control" unique_id=1155235894 node_paths=PackedStringArray("raw_text_label", "type_label", "status_code_label", "detail_label", "extra", "is_face_to_detect")]
+[node name="Control" type="Control" unique_id=1155235894 node_paths=PackedStringArray("eye_detection", "raw_text_label", "type_label", "status_code_label", "detail_label", "extra", "is_face_to_detect", "resume_button", "pause_button")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -36,18 +58,23 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = SubResource("GDScript_6x56t")
+eye_detection = NodePath("EyeDetection")
 raw_text_label = NodePath("CanvasLayer/VBoxContainer/Raw Text")
 type_label = NodePath("CanvasLayer/VBoxContainer/Type")
 status_code_label = NodePath("CanvasLayer/VBoxContainer/Status code")
 detail_label = NodePath("CanvasLayer/VBoxContainer/Details")
 extra = NodePath("CanvasLayer/VBoxContainer/Extra")
 is_face_to_detect = NodePath("CanvasLayer/VBoxContainer/Is_face_detectable")
+resume_button = NodePath("Resume")
+pause_button = NodePath("Pause")
 
 [node name="EyeDetection" type="Node" parent="." unique_id=494767839]
 script = ExtResource("1_dayeg")
 visualize_stream = true
-type_of_stream = 3
-bg_color = Color(0, 1, 1, 1)
+type_of_stream = 2
+color_of_right_eye = Color(0, 0.62300587, 0.5331381, 1)
+color_of_left_eye = Color(0.7630022, 0.44881856, 0, 1)
+color_of_right_eye2 = Color(0.5325273, 0.40998796, 1, 1)
 metadata/_custom_type_script = "uid://dupgl3gqi50lm"
 
 [node name="CameraPreview" type="TextureRect" parent="." unique_id=488336169 node_paths=PackedStringArray("eye_sensor")]
@@ -94,5 +121,29 @@ text = "Extra:"
 layout_mode = 2
 text = "Is Face Detectable: "
 
+[node name="Resume" type="Button" parent="." unique_id=223190653]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -320.0
+offset_bottom = 96.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 57
+text = "Resume"
+
+[node name="Pause" type="Button" parent="." unique_id=2137095988]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -320.0
+offset_bottom = 96.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 62
+text = "Pause"
+
 [connection signal="face_detectable_state" from="EyeDetection" to="." method="_on_eye_detection_face_detectable_state"]
 [connection signal="telemetry_received" from="EyeDetection" to="." method="_on_eye_detection_telemetry_received"]
+[connection signal="pressed" from="Resume" to="." method="_on_pressed"]
+[connection signal="pressed" from="Pause" to="." method="_on_pressed"]
