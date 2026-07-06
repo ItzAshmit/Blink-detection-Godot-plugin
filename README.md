@@ -1,9 +1,9 @@
 # Eye Detection for Godot 4
+> **Download the Direct .zip from Releases, extract it and paste into you project folder. Turn on the plugin and restart the project**
+> 
 > ⚠️ **This plugin currently supports Windows only.**
 >
 > ⚠️ **Visualizatio causes lag, use at you own risk.**
-> 
-> **You have to download EyeDetectionHelper from releases to make this work.**
 
 Bring your games to life with **real-time eye blink detection** powered by **MediaPipe** and a standard webcam.
 
