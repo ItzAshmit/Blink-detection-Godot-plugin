@@ -64,7 +64,7 @@ An example scene is included to help you get started immediately.
 
 ## Known Issues and Suggestions
 
-1. Whenthe plugin is downloaded the `camera.gd` will throw a parse error. To solve this just enable the plugin and restart the project, It will be solved in the next update.
+1. When the plugin is downloaded the `camera.gd` will throw a parse error. To solve this just enable the plugin and restart the project, It will be solved in the next update.
 
 2. Visualization is very limited, I am trying to find a method to customize it directly from GDscrpit but untill then, you have to build a Python Venv yourself and update the python file and replace with the EyeDetectionHelper.exe.
 
