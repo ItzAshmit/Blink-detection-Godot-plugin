@@ -62,6 +62,13 @@ An example scene is included to help you get started immediately.
 2. Copy the folder "addons\Eye Detection\Python_files\dist" and paste it along side of your .exe, .pck and .dlls.
 3. Test, if it doesn't work then most likely the folder is not pasted right.
 
+## Known Issues and Suggestions
+
+1. Whenthe plugin is downloaded the `camera.gd` will throw a parse error. To solve this just enable the plugin and restart the project, It will be solved in the next update.
+
+2. Visualization is very limited, I am trying to find a method to customize it directly from GDscrpit but untill then, you have to build a Python Venv yourself and update the python file and replace with the EyeDetectionHelper.exe.
+
+
 Enjoy!!
 
 # Support us by wishlisting our game The Unseeing 
