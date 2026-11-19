@@ -1,63 +1,18 @@
 [gd_scene format=3 uid="uid://bbnt6j4uy6awu"]
 
+[ext_resource type="Script" uid="uid://r20yns45exlw" path="res://addons/Eye Detection/Example Scene/example.gd" id="1_6x56t"]
 [ext_resource type="Script" uid="uid://dupgl3gqi50lm" path="res://addons/Eye Detection/python_results.gd" id="1_dayeg"]
-[ext_resource type="Script" uid="uid://iult0dhysvm" path="res://addons/Eye Detection/camera.gd" id="2_u0mdj"]
+[ext_resource type="PackedScene" uid="uid://cvf4m46yh8408" path="res://addons/Eye Detection/Example Scene/example_visualization.tscn" id="3_yqagc"]
 
-[sub_resource type="GDScript" id="GDScript_6x56t"]
-script/source = "extends Control
-
-@export var eye_detection:EyeDetection
-@export var raw_text_label:Label
-@export var type_label:Label
-@export var status_code_label:Label
-@export var detail_label:Label
-@export var extra:Label
-@export var is_face_to_detect:Label
-@export var resume_button:Button
-@export var pause_button:Button
-
-func _ready() -> void:
-	pause_button.visible = true
-	resume_button.visible = false
-
-
-
-
-
-func _on_eye_detection_telemetry_received(RawText: String, Type: String, Code: String, Detail: String, Extra: String) -> void:
-	raw_text_label.text = \"Raw Text: %s\"%RawText
-	type_label.text = \"Type: %s\"%Type
-	status_code_label.text = \"Status Code: %s\"%Code
-	detail_label.text = \"Details: %s\"%Detail
-	extra.text = \"Extra: %s\"%Extra
-
-
-
-
-func _on_eye_detection_face_detectable_state(State: bool) -> void:
-	is_face_to_detect.text = \"Is Face Detectable: %s\"%str(State)
-
-
-func _on_pressed() -> void:
-	if eye_detection.paused:
-		eye_detection.resume_process()
-		resume_button.visible = false
-		pause_button.visible = true
-	else:
-		eye_detection.pause_process()
-		resume_button.visible = true
-		pause_button.visible = false
-		
-"
-
-[node name="Control" type="Control" unique_id=1155235894 node_paths=PackedStringArray("eye_detection", "raw_text_label", "type_label", "status_code_label", "detail_label", "extra", "is_face_to_detect", "resume_button", "pause_button")]
+[node name="Control" type="Control" unique_id=1155235894 node_paths=PackedStringArray("eye_detection", "raw_text_label", "type_label", "status_code_label", "detail_label", "extra", "is_face_to_detect", "resume_button", "pause_button", "h_box_container")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = SubResource("GDScript_6x56t")
+mouse_filter = 2
+script = ExtResource("1_6x56t")
 eye_detection = NodePath("EyeDetection")
 raw_text_label = NodePath("CanvasLayer/VBoxContainer/Raw Text")
 type_label = NodePath("CanvasLayer/VBoxContainer/Type")
@@ -67,33 +22,22 @@ extra = NodePath("CanvasLayer/VBoxContainer/Extra")
 is_face_to_detect = NodePath("CanvasLayer/VBoxContainer/Is_face_detectable")
 resume_button = NodePath("Resume")
 pause_button = NodePath("Pause")
+h_box_container = NodePath("HBoxContainer")
 
 [node name="EyeDetection" type="Node" parent="." unique_id=494767839]
 script = ExtResource("1_dayeg")
-visualize_stream = true
-type_of_stream = 2
-color_of_right_eye = Color(0, 0.62300587, 0.5331381, 1)
-color_of_left_eye = Color(0.7630022, 0.44881856, 0, 1)
-color_of_right_eye2 = Color(0.5325273, 0.40998796, 1, 1)
 metadata/_custom_type_script = "uid://dupgl3gqi50lm"
 
-[node name="CameraPreview" type="TextureRect" parent="." unique_id=488336169 node_paths=PackedStringArray("eye_sensor")]
+[node name="Example Visualization" parent="." unique_id=1101845530 node_paths=PackedStringArray("eye_detection") instance=ExtResource("3_yqagc")]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-flip_h = true
-script = ExtResource("2_u0mdj")
-eye_sensor = NodePath("../EyeDetection")
-metadata/_custom_type_script = "uid://iult0dhysvm"
+eye_detection = NodePath("../EyeDetection")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=28784438]
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer" unique_id=444053414]
 offset_right = 1152.0
 offset_bottom = 108.0
+mouse_filter = 2
 alignment = 1
 
 [node name="Raw Text" type="Label" parent="CanvasLayer/VBoxContainer" unique_id=10099686]
@@ -142,6 +86,17 @@ offset_bottom = 96.0
 grow_horizontal = 0
 theme_override_font_sizes/font_size = 62
 text = "Pause"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=467517287]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -136.0
+grow_horizontal = 2
+grow_vertical = 0
+alignment = 1
 
 [connection signal="face_detectable_state" from="EyeDetection" to="." method="_on_eye_detection_face_detectable_state"]
 [connection signal="telemetry_received" from="EyeDetection" to="." method="_on_eye_detection_telemetry_received"]

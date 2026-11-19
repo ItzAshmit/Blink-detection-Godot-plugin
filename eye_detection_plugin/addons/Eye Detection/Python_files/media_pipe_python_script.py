@@ -1,10 +1,12 @@
-import os
+import json
 import platform
 import sys
 import time
 import threading
 from pathlib import Path
 
+is_running: bool = True
+SEP:str = ""
 
 def emit(message_type: str, code: str, detail: str, extra: str | None = None) -> None:
     global SEP
@@ -38,7 +40,8 @@ except ImportError:
     sys.exit(1)
 
 paused: bool = False
-
+camera_index: int = 0
+Heartbeat_timer:float = time.time()
 
 def string_to_bool(input:str) -> bool:
 	input = input.lower()
@@ -55,37 +58,29 @@ def string_to_bool(input:str) -> bool:
 
 
 
-is_running: bool = True
-SEP:str = ""
 
 
 def main() -> None:
-
+    closed_theshold_far = float(sys.argv[1]) if len(sys.argv) > 1 else 0.25
+    opened_theshold_far = float(sys.argv[2]) if len(sys.argv) > 2 else 0.3
     is_debug_build = string_to_bool(sys.argv[3] if len(sys.argv) > 3 else "false")
-    visualize_stream = string_to_bool(sys.argv[4] if len(sys.argv) > 4 else "false")
-    type_of_stream = sys.argv[5] if len(sys.argv) > 5 else 0
-    color_of_right_eye = sys.argv[6] if len(sys.argv) > 6 else "#FF000000"
-    color_of_left_eye = sys.argv[7] if len(sys.argv) > 7 else "#FF000000"
-    bg_color = sys.argv[8] if len(sys.argv) > 8 else "#00000000"
-    color_of_right_eye2 = sys.argv[9] if len(sys.argv) > 9 else "#00B3FF00"
-    color_of_left_eye2 = sys.argv[10] if len(sys.argv) > 10 else "#00B3FF00"
-
+    closed_theshold_near = float(sys.argv[4]) if len(sys.argv) > 4 else 0.17
+    opened_theshold_near = float(sys.argv[5]) if len(sys.argv) > 5 else 0.25
+    theshold_far = float(sys.argv[6]) if len(sys.argv) > 6 else 0.1
+    skip_frames = int(sys.argv[7]) if len(sys.argv) > 7 else 1
     global SEP
-    SEP = sys.argv[11] if len(sys.argv) > 11 else "<<<SEPARATOR>>>"
-    
+    SEP = sys.argv[8] if len(sys.argv) > 8 else "<<<SEPARATOR>>>"
 
     threading.Thread(target=stdin_listener, daemon=True).start()
+    
     blink_detection(
-        float(sys.argv[1]) if len(sys.argv) > 1 else 0.13,
-        float(sys.argv[2]) if len(sys.argv) > 2 else 0.25,
+        closed_theshold_far,
+        opened_theshold_far,
         is_debug_build,
-        visualize_stream,
-        type_of_stream,
-        color_of_right_eye,
-        color_of_left_eye,
-        color_of_right_eye2,
-        color_of_left_eye2,
-        bg_color
+        closed_theshold_near,
+        opened_theshold_near,
+        theshold_far,
+        skip_frames
     )
 
 
@@ -94,40 +89,44 @@ def pause(result: bool) -> None:
     paused = result
     emit("GAME", "P", f"Game Paused", str(paused))
 
+def open_camera() -> None:
+    global camera_index
+    global cap
+    cameras_found:list = []
+    if platform.system() == "Windows":
+        for i in range(5):
+            cap = cv2.VideoCapture(i, cv2.CAP_DSHOW)
+            if cap.isOpened():
+                cameras_found.append(i)
+                cap.release()
+            time.sleep(0.2)
+        if not len(cameras_found):
+            emit("ERROR", "CNF", "Plugin Can't Open Camera", "")
+            return
+        emit("GAME", "CF", "Cameras found", json.dumps(cameras_found))
+        camera_index = cameras_found[0]
+        cap = cv2.VideoCapture(camera_index, cv2.CAP_DSHOW)
+    else:
+        cap = cv2.VideoCapture(0)
+        emit("ERROR", "NW", "The detected OS is not Windows, For now the plugin only supports Windows. The game may crash", "")
 
 def blink_detection(
-    closed_theshold: float = 0.1,
-    opened_theshold: float = 0.3,
+    closed_theshold_far: float = 0.1,
+    opened_theshold_far: float = 0.3,
     is_debuged: bool = False,
-    visualize_stream: bool = False,
-    type_of_stream:int = 0,
-    color_of_right_eye = "#FF000000",
-    color_of_left_eye = "#FF000000",
-    color_of_right_eye2 = "#FF000000",
-    color_of_left_eye2 = "#FF000000",
-    bg_color = "#00000000"
+    closed_theshold_near: float = 0.17,
+    opened_theshold_near: float = 0.25,
+    theshold_far: float = 0.1,
+    skip_frames: int = 0,
 ) -> None:
     
     emit(
         "GAME",
         "STR",
-        f"Starting blink detection with closed threshold ({closed_theshold}), opened threshold ({opened_theshold}), is_debug_build ({is_debuged}), type_of_stream ({type_of_stream}), color_of_right_eye ({color_of_right_eye}), color_of_left_eye ({color_of_left_eye}), bg_color ({bg_color})","" 
+        f"Starting blink detection with closed threshold ({closed_theshold_far}), opened threshold ({opened_theshold_far}), is_debug_build ({is_debuged}), closed_theshold_near ({closed_theshold_near}), opened_theshold_near ({opened_theshold_near}), theshold_far ({theshold_far})","" 
     )
 
-    camera_found:bool = False
-    if platform.system() == "Windows":
-        for i in range(5):
-            cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-            if cap.isOpened():
-                camera_found = True
-                break
-            time.sleep(1.0)
-        if not camera_found:
-            emit("ERROR", "CNF", "Plugin Can't Open Camera", "")
-            return
-    else:
-        cap = cv2.VideoCapture(0)
-        emit("ERROR", "NW", "The detected OS is not Windows, For now the plugin only supports Windows. The game may crash", "")
+    open_camera()
 
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
@@ -160,10 +159,11 @@ def blink_detection(
     start_time = 0.0
     is_blink_time = False
     list_of_frames: list[float] = []
-    last_no_face_log_time = 0.0
 
     try:
         while is_running:
+
+            heartbeat_reciever()
             
             if paused:
                 time.sleep(0.1)
@@ -181,28 +181,11 @@ def blink_detection(
             frame_timestamp_ms = int(time.monotonic() * 1000)
             result = landmarker.detect_for_video(mp_image, frame_timestamp_ms)
 
-            bg_screen = np.zeros((h, w, 4), dtype=np.uint8)
-
-            bgc = change_to_BGRA(bg_color)
-            
-            bg_screen[:] = (bgc[0], bgc[1], bgc[2], bgc[3])
-
             if result.face_landmarks:
                 face = result.face_landmarks[0]
 
+                send_eye_coordinates(face, w, h, left_eye_full, right_eye_full)
 
-                if type_of_stream == "0":
-                    Show_eyes_0(visualize_stream ,frame, bg_screen)
-
-                elif type_of_stream == "1":
-                    Show_eyes_1(left_eye_full, right_eye_full, h, w, bg_screen, face, color_of_right_eye, color_of_left_eye, color_of_right_eye2, color_of_left_eye2, visualize_stream)
-
-                elif type_of_stream == "2":
-                    Show_eyes_2(left_eye_full, right_eye_full, h, w, bg_screen, face,color_of_right_eye, color_of_left_eye, color_of_right_eye2, color_of_left_eye2, visualize_stream)
-
-                elif type_of_stream == "3":
-                    Show_eyes_3(left_eye_full, right_eye_full, h, w, bg_screen, face,color_of_right_eye, color_of_left_eye, visualize_stream)
-                
                 left_eye_width = abs(face[33].x - face[133].x)
                 left_eye_y_gap = (abs(face[160].y - face[153].y) + abs(face[158].y - face[144].y)) / 2
                 left_eye_ratio = left_eye_y_gap / left_eye_width
@@ -214,195 +197,111 @@ def blink_detection(
                 eye_ratio = (left_eye_ratio + right_eye_ratio) / 2
                 face_width = abs(face[362].x - face[33].x)
 
-                if face_width > 0.1:
-                    closed_theshold = 0.25
-                    opened_theshold = 0.3
+                if face_width > theshold_far:
+                    closed_theshold_far = closed_theshold_far
+                    opened_theshold_far = opened_theshold_far
                 else:
-                    closed_theshold = 0.17
-                    opened_theshold = 0.25
+                    closed_theshold_far = closed_theshold_near
+                    opened_theshold_far = opened_theshold_near
 
-                # list_of_frames.append(eye_ratio)
-                # if len(list_of_frames) < 1:
-                #     continue
 
-                # total = 0.0
-                # for item in list_of_frames:
-                #     total += item
-                # eye_ratio = total / len(list_of_frames)
-                # list_of_frames.clear()
+                list_of_frames.append(eye_ratio)
+                if len(list_of_frames) < (skip_frames + 1):
+                    continue
 
-                if not is_blink_time and eye_ratio < closed_theshold:
+                total = 0.0
+                for item in list_of_frames:
+                    total += item
+                eye_ratio = total / len(list_of_frames)
+                list_of_frames.clear()
+
+
+                if not is_blink_time and eye_ratio < closed_theshold_far:
                     start_time = time.time()
                     emit("GAME", "EC", "Eyes closed", "")
                     is_blink_time = True
 
-                if is_blink_time and eye_ratio > opened_theshold and time.time() - start_time > 0.05:
+                if is_blink_time and eye_ratio > opened_theshold_far and time.time() - start_time > 0.05:
                     emit("GAME", "EO", "Eyes opened", "")
                     emit("GAME", "D", "Duration", str(time.time() - start_time))
                     is_blink_time = False
 
-            else:
-                now = time.monotonic()
-                Transparent_screen = np.zeros((h, w, 4), dtype=np.uint8)
-                frame_path = output_dir() / "Frame.png"
-                if not cap.isOpened():
-                    emit("ERROR", "CC", "Camera is closed, cannot write frame, Trying to reopen", "")
-                    cap.release()
-                    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-                    time.sleep(1.5)
-                    cap.read()
-                try:
-                    success = cv2.imwrite(str(frame_path), Transparent_screen)
-                except Exception as e:
-                    emit("ERROR", "FW", f"Failed writing frame", "{str(e)}")
-                if now - last_no_face_log_time >= 1.0:
-                    emit("ERROR", "NFF", "No face found", "")
-                    last_no_face_log_time = now
-                continue
-
-            Update_Frame(bg_screen, visualize_stream)
-
         stop_process(cap)
 
-    finally:
-        stop_process(cap)
-
-
-
-def change_to_BGRA(hex_color):
-    r = int(hex_color[1:3], 16)  
-    g = int(hex_color[3:5], 16)  
-    b = int(hex_color[5:7], 16)  
-    a = int(hex_color[7:9], 16)  
-
-    return [b, g, r, a]
-
-
-
-
-
-
-def Update_Frame(bg_screen, visualize_stream: bool = False) -> None:
-    if not visualize_stream:
-        return
-
-    try:
-        frame_path = output_dir() / "Frame.png"
-        cv2.imwrite(frame_path, bg_screen)
     except Exception as e:
-        emit("ERROR", "FNF", "Error in frame overwriting",str(e))
+        emit("ERROR", "RTE", "Runtime error occurred", str(e))
+        stop_process(cap)
 
 
+def send_eye_coordinates(face, w, h, left_eye_full, right_eye_full):
+    left_outmost_left = face[33]
+    left_outmost_right = face[133]
+    right_outmost_left = face[362]
+    right_outmost_right = face[263]
 
-def Show_eyes_0(visualize_stream, frame, bg_screen):
-    if not visualize_stream:
-        return
-    bg_screen[:] = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)
+    left_eye_left = [int(left_outmost_left.x * w), int(left_outmost_left.y * h)]
+    right_eye_right = [int(right_outmost_left.x * w), int(right_outmost_left.y * h)]
+    left_eye_right = [int(left_outmost_right.x * w), int(left_outmost_right.y * h)]
+    right_eye_left = [int(right_outmost_right.x * w), int(right_outmost_right.y * h)]
+
+    left_center = [int((left_eye_left[0] + left_eye_right[0]) / 2), int((left_eye_left[1] + left_eye_right[1]) / 2)]
+    right_center = [int((right_eye_left[0] + right_eye_right[0]) / 2), int((right_eye_left[1] + right_eye_right[1]) / 2)]
+
+    left_eye_x = left_center[0]
+    left_eye_y = left_center[1]
+    right_eye_x = right_center[0]
+    right_eye_y = right_center[1]
+
+    left_array = {}
+    left_array["Center"] = [(w - left_eye_x), left_eye_y]
+
+    lm1 = face[left_eye_full[0]]
+    left_array["Corner_Left"] = [(w - int(lm1.x * w)), int(lm1.y * h)]
+
+    lm2 = face[left_eye_full[1]]
+    left_array["Top_Left"] = [(w - int(lm2.x * w)), int(lm2.y * h)]
+
+    lm3 = face[left_eye_full[2]]
+    left_array["Top_Right"] = [(w - int(lm3.x * w)), int(lm3.y * h)]
+
+    lm4 = face[left_eye_full[3]]
+    left_array["Corner_Right"] = [(w - int(lm4.x * w)), int(lm4.y * h)]
+
+    lm5 = face[left_eye_full[4]]
+    left_array["Bottom_Right"] = [(w - int(lm5.x * w)), int(lm5.y * h)]
+
+    lm6 = face[left_eye_full[5]]
+    left_array["Bottom_Left"] = [(w - int(lm6.x * w)), int(lm6.y * h)]
+
+    right_array = {}
+    right_array["Center"] = [(w - right_eye_x), right_eye_y]
+
+    ln1 = face[right_eye_full[0]]
+    right_array["Corner_Left"] = [(w - int(ln1.x * w)), int(ln1.y * h)]
+
+    ln2 = face[right_eye_full[1]]
+    right_array["Top_Left"] = [(w - int(ln2.x * w)), int(ln2.y * h)]
+
+    ln3 = face[right_eye_full[2]]
+    right_array["Top_Right"] = [(w - int(ln3.x * w)), int(ln3.y * h)]
+
+    ln4 = face[right_eye_full[3]]
+    right_array["Corner_Right"] = [(w - int(ln4.x * w)), int(ln4.y * h)]
+
+    ln5 = face[right_eye_full[4]]
+    right_array["Bottom_Right"] = [(w - int(ln5.x * w)), int(ln5.y * h)]
+
+    ln6 = face[right_eye_full[5]]
+    right_array["Bottom_Left"] = [(w - int(ln6.x * w)), int(ln6.y * h)]
+
+
+    jsonfy_left = json.dumps(left_array)
+    jsonfy_right = json.dumps(right_array)
+
+    emit("GAME", "COR", "LEFT", jsonfy_left)
+    emit("GAME", "COR", "RIGHT", jsonfy_right)
+
     
-
-
-
-
-
-
-
-
-def Show_eyes_1(left_eye_full, right_eye_full, h, w, bg_screen, face, color_of_r_eye, color_of_l_eye, color_of_r_eye2, color_of_l_eye2, visualize_stream: bool = False):
-    if not visualize_stream:
-        return
-
-    cl = change_to_BGRA(color_of_l_eye)
-    cr = change_to_BGRA(color_of_r_eye)
-
-    for i in left_eye_full:
-            lm = face[i]
-            px = int(lm.x * w)
-            py = int(lm.y * h)
-            cv2.circle(bg_screen, (px, py), 2, (cl[0], cl[1], cl[2], cl[3]), -1)
-
-    for i in right_eye_full:
-            lm = face[i]
-            px = int(lm.x * w)
-            py = int(lm.y * h)
-            cv2.circle(bg_screen, (px, py), 2, (cr[0], cr[1], cr[2], cr[3]), -1)
-
-
-    cl2 = change_to_BGRA(color_of_l_eye2)
-    cr2 = change_to_BGRA(color_of_r_eye2)
-
-    for i in left_eye_full:
-            for ii in left_eye_full:
-                lm = face[i]
-                px = int(lm.x * w)
-                py = int(lm.y * h)
-
-                lm2 = face[ii]
-                px2 = int(lm2.x * w)
-                py2 = int(lm2.y * h)
-
-                cv2.line(bg_screen, (px, py), (px2, py2), (cl2[0], cl2[1], cl2[2], cl2[3]), 1)
-
-    for i in right_eye_full:
-            for ii in right_eye_full:
-                lm = face[i]
-                px = int(lm.x * w)
-                py = int(lm.y * h)
-
-                lm2 = face[ii]
-                px2 = int(lm2.x * w)
-                py2 = int(lm2.y * h)
-
-                cv2.line(bg_screen, (px, py), (px2, py2), (cr2[0], cr2[1], cr2[2], cr2[3]), 1)
-
-
-def Show_eyes_2(left_eye_full, right_eye_full, h, w, bg_screen, face, color_of_r_eye, color_of_l_eye, color_of_r_eye2, color_of_l_eye2, visualize_stream: bool = False):
-    if not visualize_stream:
-        return
-
-    cl = change_to_BGRA(color_of_l_eye)
-    cr = change_to_BGRA(color_of_r_eye)
-    cl2 = change_to_BGRA(color_of_l_eye2)
-    cr2 = change_to_BGRA(color_of_r_eye2)
-
-    for i in left_eye_full:
-        lm = face[i]
-        px = int(lm.x * w)
-        py = int(lm.y * h)
-        cv2.circle(bg_screen, (px, py), 10, (cl[0], cl[1], cl[2], cl[3]), -1)
-        cv2.circle(bg_screen, (px, py), 5, (cl2[0], cl2[1], cl2[2], cl2[3]), -1)
-
-    for i in right_eye_full:
-        lm = face[i]
-        px = int(lm.x * w)
-        py = int(lm.y * h)
-        cv2.circle(bg_screen, (px, py), 10, (cr[0], cr[1], cr[2], cr[3]), -1)
-        cv2.circle(bg_screen, (px, py), 5, (cr2[0], cr2[1], cr2[2], cr2[3]), -1)
-
-def Show_eyes_3(left_eye_full, right_eye_full, h, w, bg_screen, face,color_of_r_eye, color_of_l_eye, visualize_stream):
-    if not visualize_stream:
-        return
-
-    cl = change_to_BGRA(color_of_l_eye)
-    cr = change_to_BGRA(color_of_r_eye)
-
-    for i in left_eye_full:
-        lm = face[i]
-        px = int(lm.x * w)
-        py = int(lm.y * h)
-        cv2.circle(bg_screen, (px, py), 1, (cl[0], cl[1], cl[2], cl[3]), -1)
-
-    for i in right_eye_full:
-        lm = face[i]
-        px = int(lm.x * w)
-        py = int(lm.y * h)
-        cv2.circle(bg_screen, (px, py), 1, (cr[0], cr[1], cr[2], cr[3]), -1)
-
-
-
-
-
-
-
 def runtime_dir() -> Path:
     try:
         if getattr(sys, "frozen", False):
@@ -413,28 +312,10 @@ def runtime_dir() -> Path:
     except Exception as error:
         emit("ERROR", "RDIR", "Cannot retrieve any type of runtime path", str(error))
 
-def output_dir() -> Path:
-    try:
-        if getattr(sys, "frozen", False):
-            return Path(sys.executable).resolve().parent
-        return Path(__file__).resolve().parent
-    except Exception as error:
-        emit("ERROR", "ODIR", "Cannot retrieve any type of runtime path even outside the python file", str(error))
-
-
-
-# def fix_broken_camera():
-#     global cap
-#     if not cap.isOpened():
-#         cap.release()
-#         cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-#         time.sleep(1.5)
-#         cap.read()
-
-
 
 def stdin_listener():
     global is_running
+    global Heartbeat_timer
     while is_running:
         line = sys.stdin.readline()
         if not line:
@@ -448,9 +329,21 @@ def stdin_listener():
             emit("GAME", "STOP", "Stopping the process", "")
             time.sleep(0.1)
             is_running = False
+        elif command.startswith("CHNAGE_CAMERA:"):
+            time.sleep(0.1)
+            change_camera(int(command.split(":")[1]))
+
+        elif command == "HEARTBEAT":
+            Heartbeat_timer = time.time()
+            emit("GAME", "HB", "Heartbeat received", "")
 
 
-
+def heartbeat_reciever():
+    global Heartbeat_timer
+    global cap
+    if time.time() - Heartbeat_timer > 5.0:
+        emit("ERROR", "HB", "Heartbeat not received for 5 seconds, stopping the process", "")
+        stop_process(cap)
 
 
 def stop_process(cap = None) -> None:
@@ -460,6 +353,35 @@ def stop_process(cap = None) -> None:
     cv2.destroyAllWindows()
     sys.exit()
 
+def change_camera(camera_index_: str) -> None:
+    global camera_index
+    global cap
+
+    index:int = 0
+    if cap:
+        cap.release()
+    if platform.system() == "Windows":
+        cap = cv2.VideoCapture(camera_index_, cv2.CAP_DSHOW)
+    else:
+        cap = cv2.VideoCapture(camera_index_)
+        emit("ERROR", "NW", "The detected OS is not Windows, For now the plugin only supports Windows. The game may crash", "")
+    if cap.isOpened():
+        emit("GAME", "CC", f"Camera changed to index {camera_index_}", str(cap.isOpened()))
+        index = camera_index_
+
+    else:
+        emit("ERROR", "CCF", f"Failed to change camera to index {camera_index_}, changing to initial index", str(cap.isOpened()))
+        if platform.system() == "Windows":
+            cap = cv2.VideoCapture(camera_index, cv2.CAP_DSHOW)
+            index = camera_index
+        else:
+            cap = cv2.VideoCapture(camera_index)
+            index = camera_index
+            emit("ERROR", "NW", "The detected OS is not Windows, For now the plugin only supports Windows. The game may crash", "")
+
+    emit("GAME", "CS", f"Camera changed successfully", json.dumps([camera_index, index]))
+
+    camera_index = index
 
 if __name__ == "__main__":
     main()
